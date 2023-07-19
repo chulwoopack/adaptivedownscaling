@@ -34,4 +34,4 @@ python adaptive-downscaling-v9 --image_list [image_list.txt] --output_dir [outpu
 - `--output_dir`: Specifies the path to save output images.
 
 ## Contact
-Please contact me via [email](chulwoo.pack@huskers.unl.edu) if you have any question.
+Please [email](chulwoo.pack@huskers.unl.edu) me if you have any question.
