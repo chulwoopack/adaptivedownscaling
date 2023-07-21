@@ -22,11 +22,17 @@ Comparison between downscaled image by ours and conventional method is shown bel
 Segmentation quality improvements gained by our downscaled images are shown below:
 ![seg_results](/assets/seg_results.png)
 
-## Installation
-Please run `setup.py` to match the dependencies.
+## Prerequisites
+The required software systems and libraries are:
+* Python >= 3.6
+* numpy >= 1.21.6
+* matplotlib >= 3.1.1
+* opencv-python >= 4.0.1
+* tqdm >= 4.31.1
+* scikit-learn >= 0.20.3
+* scikit-image >= 0.15.0
 
 ## Usage
-
 ```
 python adaptive-downscaling-v9 --image_list [image_list.txt] --output_dir [output_dir]
 ```
