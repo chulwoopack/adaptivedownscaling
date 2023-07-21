@@ -538,14 +538,14 @@ for image_path in tqdm(image_lists):
     #resizer.resize(image, size=(1280, 896), mode='adaptive', glcm='entropy', amp=False)    
     #resizer.resize(image, size=(1280, 896), mode='adaptive', glcm='entropy', amp=True)    
     #resizer.resize(image, size=(1280, 896), mode='adaptive', amp=False)
-    #resizer.resize(image, size=(1280, 896), mode='adaptive', amp=True)    
+    resizer.resize(image, size=(1280, 896), mode='adaptive', amp=True)    
     
     # f2
     #resizer.resize(image, size=(640, 448), mode='uniform')
     #resizer.resize(image, size=(640, 448), mode='adaptive', amp=True)    
     
     # f4
-    resizer.resize(image, size=(320, 224), mode='uniform')
+    #resizer.resize(image, size=(320, 224), mode='uniform')
     #resizer.resize(image, size=(320, 224), mode='adaptive', amp=True)    
     
     # f8
