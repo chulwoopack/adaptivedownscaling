@@ -5,6 +5,7 @@ from tqdm import tqdm
 import math
 from typing import Union, Tuple
 import fast_glcm
+import time
 
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
@@ -29,6 +30,8 @@ import csv
 # - amplifying line component
 # Ver. 9
 # - mitigate bleed-through
+# ver. 10
+# - added more edge options. e.g., scharr, canny
 
 class ContentsAwareAdaptiveDownscaling:
     def __init__(self, debug:bool=False, vis:bool=False) -> None:
@@ -78,6 +81,9 @@ class ContentsAwareAdaptiveDownscaling:
     _compute_std_thresholds
     '''
     def _compute_std_thresholds(self) -> None:
+        # get the start time
+        st = time.time()
+
         _patch_stds = [] # 7x7 patches
         _height,_width = self.ori_image.shape[:2]
         # collect random patches
@@ -100,6 +106,14 @@ class ContentsAwareAdaptiveDownscaling:
         _th2 = g2_mean + (g3_mean - g2_mean)*(g3_prop/(g2_prop+g3_prop))
         self.std_th1 = _th1
         self.std_th2 = _th2
+
+        # get the end time
+        et = time.time()
+
+        # get the execution time
+        elapsed_time = et - st
+        print('precomputation is done: {} seconds'.format(elapsed_time))
+        #exit()
 
     '''
     _set_input
@@ -140,7 +154,7 @@ class ContentsAwareAdaptiveDownscaling:
                kernel_scale   : int=3, 
                cond_threshold : int=128, 
                scope_scale    : int=2, 
-               glcm           : str=None,
+               opt            : str=None,
                amp            : bool=False) -> None:
         
         # Set input: (1) read image, (2) store shape, size, etc.
@@ -172,24 +186,34 @@ class ContentsAwareAdaptiveDownscaling:
                 
             if self.DEBUG: print("Adaptive Resizing")
             # Resize image based on either "LoG" or "GLCM"
-            if(glcm==None):
+            if(opt=='log'):
                 #cleaned_image = skimage.exposure.match_histograms(self.ori_image, cv2.imread('../../data/00674590.png',0)).astype(np.uint8)
                 self.map = cv2.Laplacian(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), cv2.CV_16S, ksize=kernel_scale)
-            elif(glcm=='dissimilarity'):
+            elif(opt=='dissimilarity'):
                 self.map = fast_glcm.fast_glcm_dissimilarity(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
-            elif(glcm=='contrast'):
+            elif(opt=='contrast'):
                 self.map = fast_glcm.fast_glcm_contrast(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
-            elif(glcm=='homogeneity'):
+            elif(opt=='homogeneity'):
                 self.map = fast_glcm.fast_glcm_homogeneity(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
-            elif(glcm=='entropy'):
+            elif(opt=='entropy'):
                 self.map = fast_glcm.fast_glcm_entropy(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
                 #self.map = fast_glcm.fast_glcm_entropy(self.ori_image, ks=kernel_scale)
-            elif(glcm=='max'):
+            elif(opt=='max'):
                 self.map = fast_glcm.fast_glcm_max(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
-            elif(glcm=='ASM'):
+            elif(opt=='ASM'):
                 self.map,_ = fast_glcm.fast_glcm_ASM(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
-            elif(glcm=='energy'):
+            elif(opt=='energy'):
                 _,self.map = fast_glcm.fast_glcm_ASM(cv2.GaussianBlur(self.ori_image,(kernel_scale,kernel_scale),cv2.BORDER_DEFAULT), ks=kernel_scale)
+            elif(opt=='scharr'):
+                scharrx = cv2.Scharr(self.ori_image, cv2.CV_64F, 1, 0)
+                scharry = cv2.Scharr(self.ori_image, cv2.CV_64F, 0, 1)
+                self.map = np.sqrt(np.power(scharrx,2) + np.power(scharrx,2)) 
+            elif(opt=='canny'):
+                # Setting parameter values
+                t_lower = 210  # Lower Threshold
+                t_upper = 260  # Upper threshold
+                # Applying the Canny Edge filter
+                self.map = cv2.Canny(self.ori_image, t_lower, t_upper)    
             else:
                 print("Unexpected resize option.")
                 return
@@ -508,6 +532,8 @@ parser.add_argument('--output_dir', type=str, default='./outputs/')
 parser.add_argument('--output_prefix', type=str, default='')
 parser.add_argument('--index_start', type=int, default=-1)
 parser.add_argument('--index_end', type=int, default=-1)
+parser.add_argument('--mode', type=str, default='uniform')
+parser.add_argument('--option', type=str, default='log')
 args = parser.parse_args()
 
 IMAGE_LIST_FILE = args.image_list
@@ -516,6 +542,10 @@ INDEX_START     = args.index_start
 INDEX_END       = args.index_end
 OUTPUT_DIR      = args.output_dir
 OUTPUT_CSV_NAME = OUTPUT_PREFIX + '_' + str(INDEX_START) + '_' + str(INDEX_END) + '.csv'
+MODE            = args.mode
+OPT             = args.option
+
+print('Resizing image... {} + {}'.format(MODE,OPT))
 
 # Prepare input stream
 with open(IMAGE_LIST_FILE, 'r') as f:
@@ -538,7 +568,7 @@ for image_path in tqdm(image_lists):
     #resizer.resize(image, size=(1280, 896), mode='adaptive', glcm='entropy', amp=False)    
     #resizer.resize(image, size=(1280, 896), mode='adaptive', glcm='entropy', amp=True)    
     #resizer.resize(image, size=(1280, 896), mode='adaptive', amp=False)
-    resizer.resize(image, size=(1280, 896), mode='adaptive', amp=True)    
+    resizer.resize(image, size=(1280, 896), mode=MODE, opt=OPT, amp=True)    
     
     # f2
     #resizer.resize(image, size=(640, 448), mode='uniform')
