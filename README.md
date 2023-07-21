@@ -32,12 +32,12 @@ The required software systems and libraries are:
 
 ## Usage
 ```
-python adaptive-downscaling-v9 --image_list [image_list.txt] --output_dir [output_dir] --mode [uniform,adaptive] --opt [log,entropy,contrast,homogeneity,scharr,canny]
+python adaptive-downscaling-v9 --image_list <image_list.txt> --output_dir <output_dir> [--mode <uniform | adaptive>] [--opt <log|entropy|contrast|homogeneity|scharr|canny>]
 ```
 - `--image_list`: Specifies the path to the input file, which should contain a list of image paths.
 - `--output_dir`: Specifies the path to save output images.
-- `--mode`      : Specifies the image downscaling mode either `uniform` or `adaptive`.
-- `--opt`       : Specifies the mapping option among `log`, `entropy`, `contrast`, `homogeneity`, `scharr`, and `canny`.
+- `--mode`      : Specifies the image downscaling mode either `uniform` or `adaptive` (`uniform` by default).
+- `--opt`       : Specifies the mapping option among `log`, `entropy`, `contrast`, `homogeneity`, `scharr`, and `canny` (`log` by default).
 
 ## Contact
 Please [email](chulwoo.pack@huskers.unl.edu) me if you have any question.
