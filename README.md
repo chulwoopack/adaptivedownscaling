@@ -4,11 +4,9 @@ This repo is for developing a novel image downscaling method. This work is curre
 
 ## Table of Contents
 - [Project Overview](#project-overview)
-- [Installation](#installation)
+- [Prerequisites](#prerequisites)
 - [Usage](#usage)
-- [Features](#features)
-- [Contributing](#contributing)
-- [License](#license)
+- [Contact](#contact)
 
 ## Project Overview
 In this work, we propose a novel image downscaling approach that combines the strengths of both content-independent and content-aware strategies. The approach limits the sampling space per the content-independent strategy, adaptively relocating such sampled pixel points, and amplifying their intensities based on the local gradient and texture via the content-aware strategy. 
